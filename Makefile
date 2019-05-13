@@ -25,12 +25,24 @@ build/php: build/$(php_version)
 	--without-sqlite3 \
 	--without-pdo-sqlite \
 	--without-pear \
-	--disable-xml \
-	--disable-libxml \
 	--disable-dom \
+	--disable-libxml \
+	--disable-opcache \
 	--disable-simplexml \
+	--disable-xml \
 	--disable-xmlreader \
 	--disable-xmlwriter \
+	--enable-bcmath \
+	--enable-calendar \
+	--enable-exif \
+	--enable-ftp \
+	--enable-mbstring \
+	--enable-pcntl \
+	--enable-shmop \
+	--enable-sockets \
+	--enable-sysvmsg \
+	--enable-sysvsem \
+	--enable-sysvshm \
 	--prefix=$(shell pwd)/build/php
 	cd build/$(php_version) && LDFLAGS="-mmacosx-version-min=10.7" make -j 2
 	cd build/$(php_version) && make install
