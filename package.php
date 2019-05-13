@@ -12,6 +12,7 @@ $binary = fread($src, filesize(__DIR__ . '/build/embed'));
 fclose($src);
 
 $src = fopen($filename, 'r');
+// TODO: probably should trim shebangs too
 $code = '?> ' . fread($src, filesize($filename));
 fclose($src);
 
