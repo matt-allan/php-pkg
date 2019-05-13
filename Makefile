@@ -19,6 +19,7 @@ build/php: build/$(php_version)
 	--enable-embed=static \
 	--disable-cli \
 	--disable-cgi \
+	--disable-phpdbg \
 	--without-iconv \
 	--without-cdb \
 	--without-sqlite3 \
