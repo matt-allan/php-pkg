@@ -31,29 +31,29 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    uint32_t size;
+    uint32_t code_size;
 
-    if (fseek(fp, -sizeof size, SEEK_END) != 0) {
+    if (fseek(fp, -sizeof code_size, SEEK_END) != 0) {
         perror("fseek failed");
         return EXIT_FAILURE;
     }
 
-    if (fread(&size, sizeof size, 1, fp) != 1) {
+    if (fread(&code_size, sizeof code_size, 1, fp) != 1) {
         perror("fread failed");
         return EXIT_FAILURE;
     }
 
     if (is_big_endian() == true) {
-        size = swap_endianness(size);
+        code_size = swap_endianness(code_size);
     }
 
-    if (fseek(fp, -(size + sizeof size), SEEK_END) != 0) {
+    if (fseek(fp, -(code_size + sizeof code_size), SEEK_END) != 0) {
         perror("fseek failed");
         return EXIT_FAILURE;
     }
 
-    char code[size];
-    if (fread(code, size, 1, fp) != 1) {
+    char code[code_size];
+    if (fread(code, code_size, 1, fp) != 1) {
         perror("fread failed");
         return EXIT_FAILURE;
     }
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     }
 
     if (zend_eval_string(code, NULL, argv[0]) == FAILURE) {
-        perror("zend_eval_string failed");
+        perror("Script execution failed");
         return EXIT_FAILURE;
     }
 
