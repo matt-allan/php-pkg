@@ -20,9 +20,27 @@ uint32_t swap_endianness(uint32_t value)
     return result;
 }
 
+static size_t embed_stream_reader(void *handle, char *buf, size_t len)
+{
+    return fread(buf, 1, len, (FILE*)handle);
+}
+
+static void embed_stream_closer(void *handle)
+{
+    if (handle && (FILE*)handle != stdin) {
+        fclose((FILE*)handle);
+    }
+}
+
+static size_t embed_stream_fsizer(void *handle)
+{
+    // TODO: actually implement this
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
-    PHP_EMBED_START_BLOCK(argc, argv)
+    const char token[] = "__PHP_PKG_SENTINEL__";
 
     FILE * fp = fopen(argv[0], "r");
 
@@ -31,39 +49,24 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    uint32_t code_size;
+    // TODO: seek until we find the sentinel, then stop
 
-    if (fseek(fp, -sizeof code_size, SEEK_END) != 0) {
-        perror("fseek failed");
-        return EXIT_FAILURE;
-    }
+    php_embed_module.php_ini_ignore = 1;
 
-    if (fread(&code_size, sizeof code_size, 1, fp) != 1) {
-        perror("fread failed");
-        return EXIT_FAILURE;
-    }
+    PHP_EMBED_START_BLOCK(argc, argv)
 
-    if (is_big_endian() == true) {
-        code_size = swap_endianness(code_size);
-    }
+    zend_file_handle file_handle;
+    file_handle.type = ZEND_HANDLE_STREAM;
+    file_handle.filename = argv[0];
+    file_handle.opened_path = NULL;
+    file_handle.free_filename = 0;
+    file_handle.handle.stream.handle = fp;
+    file_handle.handle.stream.reader  = embed_stream_reader;
+    file_handle.handle.stream.closer  = embed_stream_closer;
+    file_handle.handle.stream.fsizer  = embed_stream_fsizer;
+    file_handle.handle.stream.isatty  = 0;
 
-    if (fseek(fp, -(code_size + sizeof code_size), SEEK_END) != 0) {
-        perror("fseek failed");
-        return EXIT_FAILURE;
-    }
-
-    char code[code_size];
-    if (fread(code, code_size, 1, fp) != 1) {
-        perror("fread failed");
-        return EXIT_FAILURE;
-    }
-
-    if (fclose(fp) != 0) {
-        perror("fclose failed");
-        return EXIT_FAILURE;
-    }
-
-    if (zend_eval_string(code, NULL, argv[0]) == FAILURE) {
+    if (php_execute_script(&file_handle) == FAILURE) {
         perror("Script execution failed");
         return EXIT_FAILURE;
     }
