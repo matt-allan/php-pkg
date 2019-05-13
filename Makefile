@@ -16,10 +16,20 @@ build/php: build/$(php_version)
 	@echo "Building php..."
 	cd build/$(php_version) && LDFLAGS="-mmacosx-version-min=10.7" ./configure \
 	--enable-static \
-	--disable-all \
+	--enable-embed=static \
 	--disable-cli \
 	--disable-cgi \
-	--enable-embed=static \
+	--without-iconv \
+	--without-cdb \
+	--without-sqlite3 \
+	--without-pdo-sqlite \
+	--without-pear \
+	--disable-xml \
+	--disable-libxml \
+	--disable-dom \
+	--disable-simplexml \
+	--disable-xmlreader \
+	--disable-xmlwriter \
 	--prefix=$(shell pwd)/build/php
 	cd build/$(php_version) && LDFLAGS="-mmacosx-version-min=10.7" make -j 2
 	cd build/$(php_version) && make install
