@@ -31,37 +31,30 @@ int main(int argc, char *argv[])
 
     const char token[] = "__PHP_PKG__";
     int start_pos = 0;
-    int token_pos = 0;
-    char last_bytes[12];
+    int token_pos = 10;
+    int current_pos = -1;
 
     int c;
+    fseek(fp, current_pos, SEEK_END);
     while ((c = fgetc(fp)) != EOF) {
-        start_pos++;
         if (c == token[token_pos]) {
-            token_pos++;
-            if (token_pos > 11) {
-                // char buf[120];
-                // fseek(fp, start_pos - 12, SEEK_SET);
-                // fread(buf, 1, 120, fp);
-                // printf("POS: [%d]", start_pos);
-                // printf("BUF: [%s]", buf);
+            token_pos--;
+            if (token_pos == 0) {
+                start_pos = current_pos + 10;
                 break;
             }
         } else {
-            token_pos = 0;
+            token_pos = 10;
         }
+        current_pos--;
+        fseek(fp, current_pos, SEEK_END);
     }
 
     if (start_pos == 0) {
         perror("Corrupt pkg");
         return EXIT_FAILURE;
     }
-
-    fseek(fp, start_pos, SEEK_SET);
-    char buf[512];
-    fread(buf, 1, 512, fp);
-    printf("POS: [%d]", start_pos);
-    printf("BUF: [%s]", buf);
+    fseek(fp, start_pos, SEEK_END);
 
     php_embed_module.php_ini_ignore = 1;
 
