@@ -1,24 +1,6 @@
 #include <sapi/embed/php_embed.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-
-bool is_big_endian()
-{
-    int n = 1;
-
-    return *(char *)&n != 1;
-}
-
-uint32_t swap_endianness(uint32_t value)
-{
-    uint32_t result = 0;
-    result |= (value & 0x000000FF) << 24;
-    result |= (value & 0x0000FF00) << 8;
-    result |= (value & 0x00FF0000) >> 8;
-    result |= (value & 0xFF000000) >> 24;
-    return result;
-}
 
 static size_t embed_stream_reader(void *handle, char *buf, size_t len)
 {
@@ -40,8 +22,6 @@ static size_t embed_stream_fsizer(void *handle)
 
 int main(int argc, char *argv[])
 {
-    const char token[] = "__PHP_PKG_SENTINEL__";
-
     FILE * fp = fopen(argv[0], "r");
 
     if(!fp) {
@@ -49,7 +29,39 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    // TODO: seek until we find the sentinel, then stop
+    const char token[] = "__PHP_PKG__";
+    int start_pos = 0;
+    int token_pos = 0;
+    char last_bytes[12];
+
+    int c;
+    while ((c = fgetc(fp)) != EOF) {
+        start_pos++;
+        if (c == token[token_pos]) {
+            token_pos++;
+            if (token_pos > 11) {
+                // char buf[120];
+                // fseek(fp, start_pos - 12, SEEK_SET);
+                // fread(buf, 1, 120, fp);
+                // printf("POS: [%d]", start_pos);
+                // printf("BUF: [%s]", buf);
+                break;
+            }
+        } else {
+            token_pos = 0;
+        }
+    }
+
+    if (start_pos == 0) {
+        perror("Corrupt pkg");
+        return EXIT_FAILURE;
+    }
+
+    fseek(fp, start_pos, SEEK_SET);
+    char buf[512];
+    fread(buf, 1, 512, fp);
+    printf("POS: [%d]", start_pos);
+    printf("BUF: [%s]", buf);
 
     php_embed_module.php_ini_ignore = 1;
 

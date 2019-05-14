@@ -17,7 +17,7 @@ fclose($src);
 
 $dest = fopen(__DIR__ . '/build/' . basename($filename, '.php'), 'w');
 fwrite($dest, $binary);
-fwrite($dest, '__PHP_PKG_SENTINEL__');
+fwrite($dest, '__PHP_PKG__');
 fwrite($dest, $code);
 fclose($dest);
 
